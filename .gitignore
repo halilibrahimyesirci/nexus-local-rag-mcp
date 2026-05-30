@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+*.tsbuildinfo
+src/**/*.js
+src/**/*.js.map
+
+# Local database (created at runtime)
+*.nexus.db
+*.nexus.db-shm
+*.nexus.db-wal
+
+# Embedding model cache (downloaded on first run)
+.transformers-cache/
+.cache/
+models/
+
+# Environment
+.env
+.env.local
+
+# Scratch / temporary
+temp/
+
+# Test artifacts
+tests/fixtures/generated/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/settings.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln

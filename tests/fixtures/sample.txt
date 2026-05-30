@@ -1,0 +1,5 @@
+This is a sample text file for testing the text parser.
+It contains multiple lines of content.
+Each line can be parsed independently or together.
+
+Lorem ipsum dolor sit amet.

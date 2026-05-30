@@ -1,0 +1,67 @@
+{
+  "name": "nexus-local-rag-mcp",
+  "version": "0.1.0",
+  "description": "Offline MCP server for local document search — semantic and keyword search over your PDFs, Markdown and text files, with no API keys, no cloud and no Docker.",
+  "type": "module",
+  "bin": {
+    "nexus-local-rag-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "mcp-server",
+    "model-context-protocol",
+    "rag",
+    "local-rag",
+    "semantic-search",
+    "embeddings",
+    "sqlite",
+    "offline",
+    "privacy",
+    "claude",
+    "cursor",
+    "windsurf"
+  ],
+  "author": "Halil İbrahim Yesirci (https://github.com/halilibrahimyesirci)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/halilibrahimyesirci/nexus-local-rag-mcp.git"
+  },
+  "homepage": "https://github.com/halilibrahimyesirci/nexus-local-rag-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/halilibrahimyesirci/nexus-local-rag-mcp/issues"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@xenova/transformers": "^2.17.0",
+    "better-sqlite3": "^9.4.3",
+    "chokidar": "^3.6.0",
+    "pdf-parse": "^1.1.1",
+    "sqlite-vss": "^0.1.2"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.8",
+    "@types/node": "^20.0.0",
+    "@types/pdf-parse": "^1.1.4",
+    "tsx": "^4.7.0",
+    "typescript": "^5.4.0",
+    "vitest": "^4.1.6"
+  }
+}
