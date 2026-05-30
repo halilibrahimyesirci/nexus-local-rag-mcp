@@ -23,9 +23,20 @@ export interface ParseError {
 }
 
 /**
- * Parse PDF file, split into chunks by 512-token boundary (51-token overlap)
- * Tracks page numbers using text distribution heuristic
- * Enforces MAX_FILE_SIZE_MB limit
+ * Estimate a 1-based page number for a chunk from its character offset, assuming text
+ * is spread evenly across the document. Clamped to the [1, pageCount] range.
+ */
+export function estimatePageNumber(charPos: number, charPerPage: number, pageCount: number): number {
+  if (charPerPage <= 0) {
+    return 1;
+  }
+  const page = Math.floor(charPos / charPerPage) + 1;
+  return Math.min(pageCount, Math.max(1, page));
+}
+
+/**
+ * Parse a PDF into chunks, estimating a page number for each from its position in the
+ * extracted text. Enforces the MAX_FILE_SIZE_MB limit.
  */
 export async function parsePDF(filePath: string): Promise<Chunk[] | ParseError> {
   try {
@@ -71,10 +82,7 @@ export async function parsePDF(filePath: string): Promise<Chunk[] | ParseError> 
         // Detect page: based on chunk's starting position in full text
         // Find where this chunk starts by searching for it in the full text
         const chunkStartInFullText = fullText.indexOf(chunkText, charOffset);
-        const estimatedPage = Math.min(
-          pageCount,
-          Math.max(1, Math.floor(chunkStartInFullText / charPerPage) + 1)
-        );
+        const estimatedPage = estimatePageNumber(chunkStartInFullText, charPerPage, pageCount);
 
         chunks.push({
           text: chunkText,

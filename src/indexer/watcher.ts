@@ -14,7 +14,8 @@ let watcher: FSWatcher | null = null;
  */
 export function watchDirectory(
   dirPath: string,
-  onFileChange: (filePath: string) => Promise<void> | void
+  onFileChange: (filePath: string) => Promise<void> | void,
+  onFileRemove?: (filePath: string) => Promise<void> | void
 ): FSWatcher {
   watcher = chokidarWatch(dirPath, {
     ignored: /(^|[\/\\])\.|\.nexus\.db|\.cache/, // Ignore hidden files, DB, cache
@@ -46,7 +47,7 @@ export function watchDirectory(
     const ext = path.extname(filePath).toLowerCase();
     if (['.pdf', '.md', '.txt'].includes(ext)) {
       console.log(`[watcher] File deleted: ${filePath}`);
-      // TODO: remove this file's chunks from the database on unlink
+      onFileRemove?.(filePath);
     }
   });
 

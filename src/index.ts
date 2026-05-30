@@ -5,14 +5,14 @@
  * From source: npm run dev -- --dir ./my-docs
  */
 
-import { resolve } from 'path';
+import { resolve, basename } from 'path';
 import { readdirSync, existsSync, lstatSync } from 'fs';
-import { initDatabase } from './db/client.js';
+import { initDatabase, closeDatabase } from './db/client.js';
 import { initSchema } from './db/schema.js';
 import { initEmbedder, embed } from './indexer/embedder.js';
 import { parsePDF, parseMarkdown, parseText, type Chunk } from './indexer/parser.js';
 import { upsertChunk, deleteChunksByFile } from './db/queries.js';
-import { watchDirectory } from './indexer/watcher.js';
+import { watchDirectory, stopWatcher } from './indexer/watcher.js';
 import { startServer } from './server.js';
 
 const SUPPORTED_EXTENSIONS = ['.pdf', '.md', '.txt'];
@@ -24,10 +24,9 @@ function isSupportedFile(fileName: string): boolean {
 
 async function indexFile(filePath: string): Promise<void> {
   try {
-    const fileName = filePath.split(/[\\/]/).pop()?.toLowerCase() || '';
+    const fileName = basename(filePath).toLowerCase();
 
     let chunks: Chunk[] | { error: string; file: string };
-
     if (fileName.endsWith('.pdf')) {
       chunks = await parsePDF(filePath);
     } else if (fileName.endsWith('.md')) {
@@ -43,8 +42,8 @@ async function indexFile(filePath: string): Promise<void> {
       return;
     }
 
-    // Replace any existing chunks for this file before re-indexing
-    deleteChunksByFile(filePath);
+    // Clear the file's previous chunks so an edited/shrunk file leaves no stale rows.
+    deleteChunksByFile(basename(filePath));
 
     let embeddedCount = 0;
     for (const chunk of chunks) {
@@ -57,7 +56,7 @@ async function indexFile(filePath: string): Promise<void> {
       }
     }
 
-    console.log(`[indexer] Indexed ${fileName}: ${embeddedCount}/${chunks.length} chunks`);
+    console.log(`[indexer] Indexed ${basename(filePath)}: ${embeddedCount}/${chunks.length} chunks`);
   } catch (err) {
     console.error(`[indexer] Exception while indexing ${filePath}:`, err);
   }
@@ -78,14 +77,31 @@ async function indexDirectory(dirPath: string): Promise<void> {
     }
   }
 
-  console.log(`[indexer] Finished: indexed ${indexedCount} files in ${dirPath}`);
+  if (indexedCount === 0) {
+    console.warn(`[indexer] No .pdf, .md or .txt files found in ${dirPath}`);
+  } else {
+    console.log(`[indexer] Finished: indexed ${indexedCount} files in ${dirPath}`);
+  }
+}
+
+function installShutdownHandlers(): void {
+  let closing = false;
+  const shutdown = async (): Promise<void> => {
+    if (closing) return;
+    closing = true;
+    console.log('\n[index] Shutting down...');
+    await stopWatcher();
+    closeDatabase();
+    process.exit(0);
+  };
+  process.on('SIGINT', shutdown);
+  process.on('SIGTERM', shutdown);
 }
 
 async function main(): Promise<void> {
   try {
     const args = process.argv.slice(2);
     const dirIndex = args.indexOf('--dir');
-
     if (dirIndex === -1 || !args[dirIndex + 1]) {
       console.error('Usage: node dist/index.js --dir <path-to-docs>');
       process.exit(1);
@@ -102,12 +118,23 @@ async function main(): Promise<void> {
 
     await indexDirectory(docsDir);
 
-    watchDirectory(docsDir, async (filePath: string) => {
-      if (isSupportedFile(filePath)) {
-        console.log(`[watcher] Re-indexing ${filePath}`);
-        await indexFile(filePath);
+    watchDirectory(
+      docsDir,
+      async (filePath: string) => {
+        if (isSupportedFile(filePath)) {
+          console.log(`[watcher] Re-indexing ${filePath}`);
+          await indexFile(filePath);
+        }
+      },
+      (filePath: string) => {
+        if (isSupportedFile(filePath)) {
+          const removed = deleteChunksByFile(basename(filePath));
+          console.log(`[watcher] Removed ${removed} chunk(s) for deleted file ${basename(filePath)}`);
+        }
       }
-    });
+    );
+
+    installShutdownHandlers();
 
     await startServer();
     console.log('[index] Ready for queries. Press Ctrl+C to exit.');

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseMarkdown, parseText } from '../src/indexer/parser';
+import { parseMarkdown, parseText, estimatePageNumber } from '../src/indexer/parser';
 
 describe('Parser', () => {
   it('parses markdown files into chunks', async () => {
@@ -30,5 +30,22 @@ describe('Parser', () => {
     if ('error' in result) {
       expect(result.error).toContain('Failed to parse');
     }
+  });
+});
+
+describe('estimatePageNumber', () => {
+  it('maps a character offset to a 1-based page', () => {
+    expect(estimatePageNumber(0, 100, 5)).toBe(1);
+    expect(estimatePageNumber(150, 100, 5)).toBe(2);
+    expect(estimatePageNumber(250, 100, 5)).toBe(3);
+  });
+
+  it('clamps to the [1, pageCount] range', () => {
+    expect(estimatePageNumber(99999, 100, 3)).toBe(3);
+    expect(estimatePageNumber(-5, 100, 3)).toBe(1);
+  });
+
+  it('falls back to page 1 when density is unknown', () => {
+    expect(estimatePageNumber(500, 0, 1)).toBe(1);
   });
 });
