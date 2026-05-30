@@ -43,7 +43,7 @@ export async function initEmbedder(): Promise<void> {
 
 /**
  * Embed single text chunk → 384-dim vector
- * Returns Float32Array for sqlite-vss BLOB storage
+ * Returns a Float32Array, ready to be stored as a BLOB.
  */
 export async function embed(text: string): Promise<Float32Array> {
   if (!embedder) {

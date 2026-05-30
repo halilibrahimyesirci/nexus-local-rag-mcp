@@ -1,5 +1,5 @@
 /**
- * Database client: opens the SQLite connection and loads sqlite-vss when available.
+ * Database client: opens the SQLite connection used across the app.
  * A single .nexus.db file lives in the project root by default.
  */
 
@@ -15,7 +15,7 @@ const DEFAULT_DB_PATH = path.join(__dirname, '../../.nexus.db');
 export let db: Database.Database | null = null;
 
 /**
- * Initialize the database connection and load the optional sqlite-vss extension.
+ * Initialize the database connection.
  * The location defaults to .nexus.db in the project root; pass `dbPath` or set the
  * NEXUS_DB_PATH environment variable to override it (use ':memory:' for tests).
  */
@@ -25,16 +25,6 @@ export function initDatabase(
   try {
     db = new Database(dbPath);
     db.pragma('journal_mode = WAL');
-
-    // sqlite-vss accelerates vector search when the extension can be loaded.
-    // It is optional: if loading fails we fall back to an exact in-memory scan.
-    try {
-      db.exec("SELECT load_extension('vss0');");
-      console.log('[db] Loaded sqlite-vss extension');
-    } catch {
-      console.warn('[db] sqlite-vss extension not available, using fallback search');
-    }
-
     console.log(`[db] Connected to ${dbPath}`);
     return db;
   } catch (err) {
