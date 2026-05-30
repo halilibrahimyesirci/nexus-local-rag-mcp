@@ -12,9 +12,9 @@ attractive for its fast startup, but the SQLite dependency rules it out for now.
 
 A single `.nexus.db` file lives next to your project — no separate server, no Docker,
 nothing to install. Each chunk's text and its embedding (stored as a BLOB) sit in one
-table. `sqlite-vss` is loaded to accelerate nearest-neighbour search when the platform
-provides the extension; when it is unavailable the query falls back to an exact cosine
-scan in JavaScript, which is fast enough for typical local document sets.
+table. Semantic search ranks chunks by cosine similarity with an exact scan, which is fast
+for the local document sets this targets and keeps the storage layer simple. A dedicated
+approximate-nearest-neighbour index is a possible future step for very large collections.
 
 ## Embeddings: Xenova/all-MiniLM-L6-v2, locally
 

@@ -91,9 +91,8 @@ handling?"*.
 1. Each file in `--dir` is parsed and split into ~512-token chunks with a 51-token overlap.
 2. Every chunk is embedded locally into a 384-dimensional vector.
 3. Chunks and vectors are written to `.nexus.db` (SQLite).
-4. Searches embed the query and rank chunks by cosine similarity. `sqlite-vss` is used to
-   accelerate this when the extension is available; otherwise an exact in-memory scan is used,
-   which is fast for typical local collections.
+4. Searches embed the query and rank chunks by cosine similarity — an exact in-memory scan that
+   is fast for the local collections this server targets.
 5. A file watcher re-indexes documents as they change.
 
 The database defaults to `.nexus.db` in the project root. Set the `NEXUS_DB_PATH` environment
@@ -115,9 +114,8 @@ choices, and [CONTRIBUTING.md](CONTRIBUTING.md) to get set up.
 - [x] PDF, Markdown, and text indexing
 - [x] Local CPU embeddings
 - [x] Keyword and semantic search with pagination
-- [x] Automatic re-indexing on file changes
-- [ ] First-class `sqlite-vss` indexing across platforms
-- [ ] Remove a file's chunks when it is deleted
+- [x] Automatic re-indexing, including removing a file's chunks when it is deleted
+- [ ] Approximate-nearest-neighbour index for very large collections
 - [ ] DOCX support
 - [ ] GPU acceleration
 
